@@ -1,22 +1,16 @@
-# Stage 1: Build stage
-FROM openjdk:21-jdk AS build
-WORKDIR /app
-COPY pom.xml .
-COPY src src
+FROM ubuntu:latest as build
 
-# Copy Maven wrapper
-COPY mvnw .
-COPY .mvn .mvn
+RUN apt-get update
+RUN apt-get install openjdk-21-jdk -y
+COPY . .
 
-# Set execution permission for the Maven wrapper
-RUN chmod +x ./mvnw
-RUN ./mvnw clean package -DskipTests
+RUN apt-get install maven -y
+RUN mvn clean install
 
-# Stage 2: Create the final Docker image using OpenJDK 21
-FROM openjdk:21-jdk
-WORKDIR /app
+FROM openjdk:21-jdk-slim
 
-# Copy the JAR from the build stage
-COPY --from=build /app/target/*.jar app.jar
-ENTRYPOINT ["java", "-jar", "app.jar"]
 EXPOSE 8080
+
+COPY --from=build /target/deploy_render-1.0.0.jar app.jar
+
+ENTRYPOINT ["java", "-jar", "app.jar"]
