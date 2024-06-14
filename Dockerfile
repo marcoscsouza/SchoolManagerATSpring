@@ -1,22 +1,19 @@
-# Stage 1: Build stage
-FROM openjdk:21-jdk AS build
+FROM maven:3.9-amazoncorretto-17-debian
+
+COPY src /app/src
+COPY pom.xml /app
+
 WORKDIR /app
-COPY pom.xml .
-COPY src src
+RUN mvn clean install
 
-# Copy Maven wrapper
-COPY mvnw .
-COPY .mvn .mvn
+FROM openjdk:17-alpine
 
-# Set execution permission for the Maven wrapper
-RUN chmod +x ./mvnw
-RUN ./mvnw clean package -DskipTests
+COPY --from=build /app/target/*.jar /app/app.jar
 
-# Stage 2: Create the final Docker image using OpenJDK 21
-FROM openjdk:21-jdk
 WORKDIR /app
 
-# Copy the JAR from the build stage
-COPY --from=build /app/target/*.jar app.jar
-ENTRYPOINT ["java", "-jar", "app.jar"]
 EXPOSE 8080
+
+
+# ENTRYPOINT ["top", "-b"]
+CMD ["java", "-jar", "app.jar"]
