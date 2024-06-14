@@ -1,10 +1,10 @@
-FROM maven:3.9-amazoncorretto-17-debian
-
+FROM maven:3.8.1-openjdk-17 AS build
 COPY src /app/src
 COPY pom.xml /app
 
 WORKDIR /app
-RUN mvn clean install
+
+RUN mvn clean install -DskipTests -X
 
 FROM openjdk:17-alpine
 
@@ -14,6 +14,4 @@ WORKDIR /app
 
 EXPOSE 8080
 
-
-# ENTRYPOINT ["top", "-b"]
 CMD ["java", "-jar", "app.jar"]
